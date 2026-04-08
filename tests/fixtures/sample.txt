@@ -1,0 +1,9 @@
+Patient Record Summary
+
+Name: John Smith
+Email: john.smith@hospital.org
+Phone: 555-123-4567
+SSN: 123-45-6789
+
+Dr. Jane Doe referred the patient on 03/15/1990.
+Contact billing at billing@acme.com for insurance questions.

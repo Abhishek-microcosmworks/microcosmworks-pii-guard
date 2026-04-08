@@ -1,0 +1,18 @@
+import { PIIGuard } from './PIIGuard.js';
+import type { PIIGuardConfig } from './types.js';
+export declare function createPIIGuard(config?: PIIGuardConfig): Promise<PIIGuard>;
+export * from './types.js';
+export { DEFAULT_PATTERNS } from './patterns.js';
+export { DEFAULT_POOLS } from './pools/index.js';
+export { PIIGuard } from './PIIGuard.js';
+export type { DetectionProvider, DetectionOptions, DetectedEntity } from './detection/DetectionProvider.js';
+export { BuiltInProvider } from './detection/BuiltInProvider.js';
+export { AWSComprehendProvider } from './detection/AWSComprehendProvider.js';
+export { HybridProvider } from './detection/HybridProvider.js';
+export { InMemoryAdapter } from './storage/InMemoryAdapter.js';
+export { KnexAdapter } from './storage/KnexAdapter.js';
+export { MongooseAdapter } from './storage/MongooseAdapter.js';
+export { InMemoryCache } from './cache/InMemoryCache.js';
+export { RedisAdapter } from './cache/RedisAdapter.js';
+export { extractText, inferFormat, isWritableFormat } from './file/index.js';
+export { createExpressMiddleware } from './middleware/express.js';

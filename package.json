@@ -1,0 +1,88 @@
+{
+  "name": "pii-guard",
+  "version": "1.0.0",
+  "description": "Universal PII redaction via realistic synthetic replacement for Node.js. Deterministic, context-aware, embedding-safe, with configurable SQL/MongoDB storage and Redis caching.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "INTEGRATION_GUIDE.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./express": {
+      "import": "./dist/middleware/express.js",
+      "types": "./dist/middleware/express.d.ts"
+    },
+    "./file": {
+      "import": "./dist/file/index.js",
+      "types": "./dist/file/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "tsc",
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "sharp": "^0.34.5"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "better-sqlite3": "^11.0.0",
+    "knex": "^3.0.0",
+    "mongodb-memory-server": "^10.0.0",
+    "mongoose": "^8.0.0",
+    "mysql2": "^3.18.2",
+    "pg": "^8.20.0",
+    "typescript": "~5.6.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-comprehend": "^3.0.0",
+    "ioredis": "^5.0.0",
+    "knex": "^3.0.0",
+    "mammoth": "^1.6.0",
+    "mongoose": "^8.0.0",
+    "mysql2": "^3.0.0",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    },
+    "@aws-sdk/client-comprehend": {
+      "optional": true
+    },
+    "knex": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "mongoose": {
+      "optional": true
+    },
+    "pdf-parse": {
+      "optional": true
+    },
+    "mammoth": {
+      "optional": true
+    }
+  }
+}
