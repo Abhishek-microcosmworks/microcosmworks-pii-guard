@@ -27,13 +27,12 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepare": "tsc",
+    "prepare": "npm run build",
     "test": "vitest",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "sharp": "^0.34.5"
+    "dotenv": "^16.0.0"
   },
   "optionalDependencies": {
     "ioredis": "^5.0.0"

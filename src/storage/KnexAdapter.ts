@@ -10,11 +10,14 @@ export class KnexAdapter implements StorageAdapter {
   private tableReady = false;
   private initPromise: Promise<void> | null = null;
 
-  constructor(databaseUrl: string) {
-    this.initPromise = this.initKnex(databaseUrl);
+  constructor(databaseUrl: string, poolConfig?: { min?: number; max?: number }) {
+    this.initPromise = this.initKnex(databaseUrl, poolConfig);
   }
 
-  private async initKnex(databaseUrl: string): Promise<void> {
+  private async initKnex(
+    databaseUrl: string,
+    poolConfig?: { min?: number; max?: number },
+  ): Promise<void> {
     let client: string;
     if (databaseUrl.startsWith('mysql://') || databaseUrl.startsWith('mysql2://')) {
       client = 'mysql2';
@@ -33,6 +36,7 @@ export class KnexAdapter implements StorageAdapter {
           ? { filename: databaseUrl === ':memory:' ? ':memory:' : databaseUrl.replace('sqlite:', '') }
           : databaseUrl,
         useNullAsDefault: client === 'better-sqlite3',
+        pool: poolConfig ?? { min: 0, max: 3 },
       });
     } catch {
       throw new Error(

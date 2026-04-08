@@ -7,9 +7,10 @@ import type { CacheAdapter } from '../types.js';
 export class RedisAdapter implements CacheAdapter {
   private redis: any; // Redis instance — typed as any to avoid hard coupling
   private prefix = 'pii-guard:';
+  private initPromise: Promise<void>;
 
   constructor(redisUrl: string) {
-    this.initRedis(redisUrl);
+    this.initPromise = this.initRedis(redisUrl);
   }
 
   private async initRedis(redisUrl: string): Promise<void> {
@@ -25,9 +26,7 @@ export class RedisAdapter implements CacheAdapter {
   }
 
   private async client(): Promise<any> {
-    if (!this.redis) {
-      await new Promise(resolve => setTimeout(resolve, 10));
-    }
+    await this.initPromise;
     return this.redis;
   }
 
@@ -42,6 +41,7 @@ export class RedisAdapter implements CacheAdapter {
   }
 
   async disconnect(): Promise<void> {
+    await this.initPromise;
     if (this.redis) {
       await this.redis.quit();
     }

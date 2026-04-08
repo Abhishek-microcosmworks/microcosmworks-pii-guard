@@ -88,11 +88,6 @@ export class MappingManager {
         }
         return results;
     }
-    /** Closes storage and cache connections cleanly on server shutdown */
-    async shutdown() {
-        await this.cache?.disconnect();
-        await this.storage.disconnect();
-    }
     /** HMAC-SHA256 hash of the original value scoped to the scopeId */
     hashEntity(value, scopeId) {
         return createHmac('sha256', this.salt + scopeId)
@@ -119,5 +114,10 @@ export class MappingManager {
         let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
+    }
+    /** Closes storage and cache connections cleanly on server shutdown */
+    async shutdown() {
+        await this.cache?.disconnect();
+        await this.storage.disconnect();
     }
 }

@@ -363,5 +363,6 @@ export class PIIGuard {
   /** Clean shutdown of all connections */
   async shutdown(): Promise<void> {
     await this.detectionProvider.shutdown?.();
+    await this.mappingManager.shutdown();
   }
 }

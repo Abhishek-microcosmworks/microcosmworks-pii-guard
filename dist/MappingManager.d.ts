@@ -18,12 +18,12 @@ export declare class MappingManager {
         original: string;
         entityType: string;
     }>>;
-    /** Closes storage and cache connections cleanly on server shutdown */
-    shutdown(): Promise<void>;
     /** HMAC-SHA256 hash of the original value scoped to the scopeId */
     private hashEntity;
     /** Encrypt a value with AES-256-GCM using the salt as key material */
     private encrypt;
     /** Decrypt a value encrypted with encrypt() */
     private decrypt;
+    /** Closes storage and cache connections cleanly on server shutdown */
+    shutdown(): Promise<void>;
 }

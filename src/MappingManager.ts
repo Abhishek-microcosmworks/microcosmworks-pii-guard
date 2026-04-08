@@ -149,4 +149,10 @@ export class MappingManager {
 
     return decrypted;
   }
+
+  /** Closes storage and cache connections cleanly on server shutdown */
+  async shutdown(): Promise<void> {
+    await this.cache?.disconnect();
+    await this.storage.disconnect();
+  }
 }
