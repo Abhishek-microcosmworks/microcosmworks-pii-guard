@@ -45,9 +45,9 @@ export class KnexAdapter {
             await this.initPromise;
             this.initPromise = null;
         }
-        const exists = await this.knex.schema.hasTable('synthetic_maps');
+        const exists = await this.knex.schema.hasTable('SyntheticMap');
         if (!exists) {
-            await this.knex.schema.createTable('synthetic_maps', (t) => {
+            await this.knex.schema.createTable('SyntheticMap', (t) => {
                 t.string('id').primary();
                 t.string('scope_id').notNullable();
                 t.string('entity_type').notNullable();
@@ -68,7 +68,7 @@ export class KnexAdapter {
     }
     async findByHash(scopeId, entityHash) {
         await this.ensureTable();
-        const row = await this.knex('synthetic_maps')
+        const row = await this.knex('SyntheticMap')
             .select('synthetic', 'entity_type as entityType')
             .where({ scope_id: scopeId, entity_hash: entityHash })
             .first();
@@ -76,7 +76,7 @@ export class KnexAdapter {
     }
     async create(scopeId, entityType, entityHash, synthetic, encryptedOriginal, contextJson) {
         await this.ensureTable();
-        await this.knex('synthetic_maps').insert({
+        await this.knex('SyntheticMap').insert({
             id: this.generateId(),
             scope_id: scopeId,
             entity_type: entityType,
@@ -88,7 +88,7 @@ export class KnexAdapter {
     }
     async findBySynthetic(scopeId, synthetic) {
         await this.ensureTable();
-        const row = await this.knex('synthetic_maps')
+        const row = await this.knex('SyntheticMap')
             .select('entity_hash as entityHash', 'entity_type as entityType', 'encrypted_original as encryptedOriginal')
             .where({ scope_id: scopeId, synthetic })
             .first();
@@ -96,7 +96,7 @@ export class KnexAdapter {
     }
     async findAllForScope(scopeId) {
         await this.ensureTable();
-        const rows = await this.knex('synthetic_maps')
+        const rows = await this.knex('SyntheticMap')
             .select('synthetic', 'entity_type as entityType', 'encrypted_original as encryptedOriginal')
             .where({ scope_id: scopeId });
         return rows;
