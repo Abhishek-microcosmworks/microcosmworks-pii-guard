@@ -41,27 +41,29 @@ export class PIIGuard {
                 context: {},
             };
         });
-        // Step 2: Extract context for each entity
-        for (const entity of entities) {
+        // Step 2: Deduplicate overlapping entities (e.g. "Jonathan" + "Richards" + "Jonathan Richards")
+        const deduped = this.deduplicateEntities(entities);
+        // Step 3: Extract context for each entity
+        for (const entity of deduped) {
             entity.context = this.contextExtractor.extractContext(entity, text);
         }
-        // Step 3: Build relationships between entities
-        this.contextExtractor.buildRelationships(entities, text);
-        // Step 4: Sort by startIndex descending (replace from end to preserve indices)
-        const sorted = [...entities].sort((a, b) => b.startIndex - a.startIndex);
-        // Step 5: Get or create replacement for each entity (strategy-aware)
+        // Step 4: Build relationships between entities
+        this.contextExtractor.buildRelationships(deduped, text);
+        // Step 5: Sort by startIndex descending (replace from end to preserve indices)
+        const sorted = [...deduped].sort((a, b) => b.startIndex - a.startIndex);
+        // Step 6: Get or create replacement for each entity (strategy-aware)
         const mapping = new Map();
         for (const entity of sorted) {
             entity.synthetic = await this.resolveReplacement(entity, opts.scopeId);
             mapping.set(entity.value, entity.synthetic);
         }
-        // Step 6: For linked entities, ensure email coherence with name (only for synthetic strategy)
+        // Step 7: For linked entities, ensure email coherence with name (only for synthetic strategy)
         for (const entity of sorted) {
             const override = this.typeOverrides[entity.type];
             const strategy = this.getStrategy(override);
             if (strategy === 'synthetic' && entity.type === PIIType.EMAIL && entity.context.relatedEntities?.length) {
                 const nameIdx = entity.context.relatedEntities[0];
-                const nameEntity = entities[nameIdx];
+                const nameEntity = deduped[nameIdx];
                 if (nameEntity && nameEntity.synthetic) {
                     const coherentEmail = this.syntheticGenerator.generateEmail(nameEntity.synthetic, entity.context, undefined);
                     entity.synthetic = coherentEmail;
@@ -69,12 +71,11 @@ export class PIIGuard {
                 }
             }
         }
-        // Step 7: Replace entities in text (already sorted end-to-start)
+        // Step 8: Replace entities in text (already sorted end-to-start)
         let resultText = text;
         for (const entity of sorted) {
             const override = this.typeOverrides[entity.type];
             const strategy = this.getStrategy(override);
-            // skip strategy: leave original text in place
             if (strategy === 'skip')
                 continue;
             resultText =
@@ -82,10 +83,10 @@ export class PIIGuard {
                     entity.synthetic +
                     resultText.slice(entity.endIndex);
         }
-        // Step 8: Return result
+        // Step 9: Return result
         return {
             text: resultText,
-            entities: entities.sort((a, b) => a.startIndex - b.startIndex),
+            entities: deduped.sort((a, b) => a.startIndex - b.startIndex),
             mapping,
         };
     }
@@ -137,12 +138,11 @@ export class PIIGuard {
         // ── Phase 3: Guard — detect and redact NEW PII ─────────────────
         const detected = await this.detectionProvider.detect(resultText);
         // Filter: enabled types only, exclude overlaps with restored originals
-        const newEntities = detected
+        const rawNewEntities = detected
             .filter(d => {
             const override = this.typeOverrides[d.type];
             if (override?.enabled === false)
                 return false;
-            // Exclude entities overlapping restored positions
             return !exclusions.some(ex => this.rangesOverlap(d.startIndex, d.endIndex, ex.start, ex.end));
         })
             .map(d => {
@@ -157,6 +157,8 @@ export class PIIGuard {
                 context: {},
             };
         });
+        // Deduplicate overlapping entities
+        const newEntities = this.deduplicateEntities(rawNewEntities);
         // Extract context for new entities
         for (const entity of newEntities) {
             entity.context = this.contextExtractor.extractContext(entity, resultText);
@@ -192,6 +194,39 @@ export class PIIGuard {
     rangesOverlap(s1, e1, s2, e2) {
         return s1 < e2 && s2 < e1;
     }
+    /**
+     * Remove overlapping entity spans, keeping the longest (or highest confidence
+     * when spans are equal length).  This is applied after every provider's
+     * detect() so that providers that return sub-span duplicates (e.g.
+     * "Jonathan", "Richards", AND "Jonathan Richards") are collapsed to the
+     * single best entity before any replacement occurs.
+     */
+    deduplicateEntities(entities) {
+        if (entities.length <= 1)
+            return entities;
+        // Sort by start index, then by span length descending (prefer longer spans)
+        const sorted = [...entities].sort((a, b) => {
+            if (a.startIndex !== b.startIndex)
+                return a.startIndex - b.startIndex;
+            return (b.endIndex - b.startIndex) - (a.endIndex - a.startIndex);
+        });
+        const result = [];
+        for (const entity of sorted) {
+            const last = result[result.length - 1];
+            if (last && entity.startIndex < last.endIndex) {
+                // Overlapping — keep the longer span; tie-break by higher confidence
+                const lastLen = last.endIndex - last.startIndex;
+                const curLen = entity.endIndex - entity.startIndex;
+                if (curLen > lastLen || (curLen === lastLen && entity.confidence > last.confidence)) {
+                    result[result.length - 1] = entity;
+                }
+            }
+            else {
+                result.push(entity);
+            }
+        }
+        return result;
+    }
     /** Same as redact — consistent synthetics ensure vector search works */
     async redactForEmbedding(text, opts) {
         return this.redact(text, opts);
@@ -199,7 +234,7 @@ export class PIIGuard {
     /** Detection only — scan without replacing */
     async detect(text) {
         const detected = await this.detectionProvider.detect(text);
-        return detected
+        const entities = detected
             .filter(d => {
             const override = this.typeOverrides[d.type];
             return override?.enabled !== false;
@@ -216,6 +251,7 @@ export class PIIGuard {
                 context: {},
             };
         });
+        return this.deduplicateEntities(entities);
     }
     /** Redact PII in a file (path or Buffer) */
     async redactFile(input, opts) {

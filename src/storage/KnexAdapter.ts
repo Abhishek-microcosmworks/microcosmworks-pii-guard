@@ -52,9 +52,9 @@ export class KnexAdapter implements StorageAdapter {
       await this.initPromise;
       this.initPromise = null;
     }
-    const exists = await this.knex.schema.hasTable('SyntheticMap');
+    const exists = await this.knex.schema.hasTable('synthetic_maps');
     if (!exists) {
-      await this.knex.schema.createTable('SyntheticMap', (t: any) => {
+      await this.knex.schema.createTable('synthetic_maps', (t: any) => {
         t.string('id').primary();
         t.string('scope_id').notNullable();
         t.string('entity_type').notNullable();
@@ -77,7 +77,7 @@ export class KnexAdapter implements StorageAdapter {
 
   async findByHash(scopeId: string, entityHash: string) {
     await this.ensureTable();
-    const row = await this.knex('SyntheticMap')
+    const row = await this.knex('synthetic_maps')
       .select('synthetic', 'entity_type as entityType')
       .where({ scope_id: scopeId, entity_hash: entityHash })
       .first();
@@ -93,7 +93,7 @@ export class KnexAdapter implements StorageAdapter {
     contextJson?: string,
   ) {
     await this.ensureTable();
-    await this.knex('SyntheticMap').insert({
+    await this.knex('synthetic_maps').insert({
       id: this.generateId(),
       scope_id: scopeId,
       entity_type: entityType,
@@ -106,7 +106,7 @@ export class KnexAdapter implements StorageAdapter {
 
   async findBySynthetic(scopeId: string, synthetic: string) {
     await this.ensureTable();
-    const row = await this.knex('SyntheticMap')
+    const row = await this.knex('synthetic_maps')
       .select(
         'entity_hash as entityHash',
         'entity_type as entityType',
@@ -119,7 +119,7 @@ export class KnexAdapter implements StorageAdapter {
 
   async findAllForScope(scopeId: string) {
     await this.ensureTable();
-    const rows = await this.knex('SyntheticMap')
+    const rows = await this.knex('synthetic_maps')
       .select(
         'synthetic',
         'entity_type as entityType',

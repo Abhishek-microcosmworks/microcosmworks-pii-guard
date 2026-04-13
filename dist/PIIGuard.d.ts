@@ -19,6 +19,14 @@ export declare class PIIGuard {
         scopeId: string;
     }): Promise<RestoreAndGuardResult>;
     private rangesOverlap;
+    /**
+     * Remove overlapping entity spans, keeping the longest (or highest confidence
+     * when spans are equal length).  This is applied after every provider's
+     * detect() so that providers that return sub-span duplicates (e.g.
+     * "Jonathan", "Richards", AND "Jonathan Richards") are collapsed to the
+     * single best entity before any replacement occurs.
+     */
+    private deduplicateEntities;
     /** Same as redact — consistent synthetics ensure vector search works */
     redactForEmbedding(text: string, opts: {
         scopeId: string;
